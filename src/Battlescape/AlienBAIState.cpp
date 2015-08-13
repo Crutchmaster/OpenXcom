@@ -1034,10 +1034,11 @@ int AlienBAIState::selectNearestTarget()
 	_closestDist= 100;
 	_aggroTarget = 0;
 	Position target;
+
 	for (std::vector<BattleUnit*>::const_iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 	{
-		if (validTarget(*i, true, true) &&
-			_save->getTileEngine()->visible(_unit, (*i)->getTile()))
+	        bool visible = _save->getTileEngine()->visible(_unit, (*i)->getTile());
+		if (validTarget(*i, true, true) )
 		{
 			tally++;
 			int dist = _save->getTileEngine()->distance(_unit->getPosition(), (*i)->getPosition());
@@ -1065,6 +1066,7 @@ int AlienBAIState::selectNearestTarget()
 				{
 					_closestDist = dist;
 					_aggroTarget = *i;
+					_visibleTarget = visible;
 				}
 			}
 		}
@@ -1710,7 +1712,25 @@ void AlienBAIState::wayPointAction()
  */
 void AlienBAIState::projectileAction()
 {
-	_attackAction->target = _aggroTarget->getPosition();
+
+	if (!_visibleTarget)
+	{
+	   Position indirect;
+	   bool check;
+	   int i = 0;
+	   do {
+		indirect = _aggroTarget->getPosition() + Position(RNG::generate(-2,2),RNG::generate(-2,2),0);
+		check = _save->getTile(indirect);
+	   } while (++i < 10 && check);
+	   if (check) {
+	      _attackAction->target = indirect;
+	   } else {
+	      _attackAction->target = _aggroTarget->getPosition();
+	   }
+	}
+	else {
+	  _attackAction->target = _aggroTarget->getPosition();
+	}
 	if (!_attackAction->weapon->getAmmoItem()->getRules()->getExplosionRadius() ||
 		explosiveEfficacy(_aggroTarget->getPosition(), _unit, _attackAction->weapon->getAmmoItem()->getRules()->getExplosionRadius(), _attackAction->diff))
 	{
@@ -1729,6 +1749,19 @@ void AlienBAIState::selectFireMethod()
 	int tuSnap = _attackAction->weapon->getRules()->getTUSnap();
 	int tuAimed = _attackAction->weapon->getRules()->getTUAimed();
 	int currentTU = _unit->getTimeUnits();
+
+	if ( !_visibleTarget) {
+	    if ( tuAuto && currentTU >= _unit->getActionTUs(BA_AUTOSHOT, _attackAction->weapon)) {
+	        _attackAction->type = BA_AUTOSHOT;
+		return;
+	    }
+	    if ( tuSnap && currentTU >= _unit->getActionTUs(BA_SNAPSHOT, _attackAction->weapon) ) {
+		_attackAction->type = BA_SNAPSHOT;
+		return;
+	    }
+
+	}
+
 
 	if (distance < 4)
 	{
@@ -1963,7 +1996,7 @@ bool AlienBAIState::validTarget(BattleUnit *unit, bool assessDanger, bool includ
 		// ignore units that are dead/unconscious
 	if (unit->isOut() ||
 		// they must be units that we "know" about
-		_intelligence < unit->getTurnsSinceSpotted() ||
+		2 < unit->getTurnsSinceSpotted() ||
 		// they haven't been grenaded
 		(assessDanger && unit->getTile()->getDangerous()) ||
 		// and they mustn't be on our side

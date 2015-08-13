@@ -39,6 +39,7 @@ class AlienBAIState : public BattleAIState
 {
 protected:
 	BattleUnit *_aggroTarget;
+	bool _visibleTarget;
 	int _knownEnemies, _visibleEnemies, _spottingEnemies;
 	int _escapeTUs, _ambushTUs, _reserveTUs;
 	BattleAction *_escapeAction, *_ambushAction, *_attackAction, *_patrolAction, *_psiAction;

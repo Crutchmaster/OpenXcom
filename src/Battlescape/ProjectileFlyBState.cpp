@@ -247,6 +247,7 @@ void ProjectileFlyBState::init()
 	{
 		_parent->getMap()->setCursorType(CT_NONE);
 		_parent->getMap()->getCamera()->stopMouseScrolling();
+		_unit->setTurnsSinceSpotted(0);
 	}
 }
 
