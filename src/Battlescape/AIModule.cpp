@@ -1796,12 +1796,12 @@ void AIModule::selectFireMethod()
 	BattleActionCost costAimed(BA_AIMEDSHOT, _attackAction->actor, _attackAction->weapon);
 
 	if ( !_visibleTarget) {
-	    if ( tuAuto && currentTU >= _unit->getActionTUs(BA_AUTOSHOT, _attackAction->weapon)) {
+	    if ( costAuto.haveTU() ) {
 	        _attackAction->type = BA_AUTOSHOT;
 		return;
 	    }
-	    if ( tuSnap && currentTU >= _unit->getActionTUs(BA_SNAPSHOT, _attackAction->weapon) ) {
-		_attackAction->type = BA_SNAPSHOT;
+	    if ( costSnap.haveTU() ) {
+			_attackAction->type = BA_SNAPSHOT;
 		return;
 	    }
 
